@@ -33,6 +33,7 @@ function AppShell() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [loading, setLoading] = useState(true);
   const [reseedLoading, setReseedLoading] = useState(false);
+  const [connError, setConnError] = useState(null);
 
   // Modals & Target Selectors
   const [selectedAssetId, setSelectedAssetId] = useState(null);
@@ -61,6 +62,8 @@ function AppShell() {
   };
 
   const bootstrap = useCallback(async () => {
+    setLoading(true);
+    setConnError(null);
     try {
       const [uList, nList] = await Promise.all([
         api.getUsers(),
@@ -77,6 +80,7 @@ function AppShell() {
       }
     } catch (err) {
       console.error("Bootstrap error:", err);
+      setConnError(err.message || "Failed to communicate with Gujarat R&B backend API");
       showError("Connection Error: " + err.message);
     } finally {
       setLoading(false);
@@ -132,6 +136,47 @@ function AppShell() {
     return (
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", fontFamily: "sans-serif" }}>
         <div>Loading Gujarat R&B Infrastructure Asset Management System...</div>
+      </div>
+    );
+  }
+
+  if (!loading && !users.length && connError) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", minHeight: "100vh", padding: 24, textAlign: "center", background: "#f8fafc", fontFamily: "sans-serif" }}>
+        <div style={{ maxWidth: 540, background: "#ffffff", padding: 36, borderRadius: 10, boxShadow: "0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1)", border: "1px solid #e2e8f0" }}>
+          <div style={{ fontSize: 44, marginBottom: 12 }}>🏛️</div>
+          <h2 style={{ color: "#0f2942", fontSize: 20, marginBottom: 6, fontWeight: 800 }}>
+            Gujarat Roads & Buildings Department
+          </h2>
+          <div style={{ fontSize: 13, color: "#64748b", marginBottom: 16 }}>
+            Infrastructure Asset Management System (IAMS)
+          </div>
+          <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "12px 16px", borderRadius: 8, marginBottom: 20, textAlign: "left" }}>
+            <div style={{ color: "#b91c1c", fontWeight: 700, fontSize: 13, marginBottom: 4 }}>
+              ⚠️ Database Connection Notice
+            </div>
+            <div style={{ color: "#7f1d1d", fontSize: 12, lineHeight: 1.5 }}>
+              {connError}
+            </div>
+          </div>
+          <div style={{ background: "#f1f5f9", padding: "14px 16px", borderRadius: 8, fontSize: 12, color: "#334155", textAlign: "left", marginBottom: 24, lineHeight: 1.6 }}>
+            <strong>Vercel Deployment Checklist:</strong>
+            <ol style={{ margin: "6px 0 0 16px", padding: 0 }}>
+              <li>Open your project in the <a href="https://vercel.com/dashboard" target="_blank" rel="noreferrer" style={{ color: "#2563eb", textDecoration: "underline" }}>Vercel Dashboard</a>.</li>
+              <li>Go to <strong>Settings</strong> &rarr; <strong>Environment Variables</strong>.</li>
+              <li>Add key <code>MONGO_URI</code> with your MongoDB Atlas connection string.</li>
+              <li>In MongoDB Atlas, ensure <strong>Network Access</strong> allows <code>0.0.0.0/0</code> (all IP addresses).</li>
+              <li>Click <strong>Redeploy</strong> in Vercel or press the button below.</li>
+            </ol>
+          </div>
+          <button
+            className="btn btn-primary"
+            style={{ width: "100%", padding: "12px 0", fontSize: 14, fontWeight: 700 }}
+            onClick={bootstrap}
+          >
+            Retry Connection
+          </button>
+        </div>
       </div>
     );
   }
